@@ -1,6 +1,6 @@
 # URP-PSX-Unity6 (URP 17)
 
-This is a fork of **[URP-PSX(https://github.com/Kodrin/URP-PSX))](https://github.com/Kodrin/URP-PSX)** with compatibility fixes for Unity 6.
+This is a fork of **[URP-PSX](https://github.com/Kodrin/URP-PSX)** with compatibility fixes for Unity 6.
 
 **[URP-14]([https://github.com/Math-Man/URP-PSX-FORKED) branch for Unity 2022, URP 14 version.**
 **[URP-11](https://github.com/Math-Man/URP-PSX-FORKED/tree/URP-11) branch for Unity 2021, URP 11 version.**
