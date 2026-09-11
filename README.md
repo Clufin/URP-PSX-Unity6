@@ -1,41 +1,42 @@
 # URP-PSX-Unity6 (URP 17)
 
-This is a fork of **[URP-PSX](https://github.com/Kodrin/URP-PSX)** with compatibility fixes for Unity 6.
+A fork of **[URP-PSX](https://github.com/Kodrin/URP-PSX)** (via
+**[Math-Man's fork](https://github.com/Math-Man/URP-PSX-FORKED)**) with
+compatibility fixes for Unity 6.
 
-Still under consturction.
+#### Compatibility
+Unity 6000.0.83f1 / URP 17. For older versions use the upstream forks:
+- [URP-PSX-FORKED](https://github.com/Math-Man/URP-PSX-FORKED) — Unity 2022, URP 14
+- [URP-11](https://github.com/Math-Man/URP-PSX-FORKED/tree/URP-11) — Unity 2021, URP 11
 
+## Changes in this fork
+- Rewrote the four post-process shaders (CRT, Dithering, Fog, Pixelation)
+  from CG to HLSL against the URP shader library.
+- Ported the render features to the Render Graph API
+  (`RecordRenderGraph` / `BlitMaterialParameters` instead of `cmd.Blit`).
+- Fixed bugs surfaced by the rewrite: dithering luminance and pattern
+  normalization, fog depth linearization and skybox exclusion, CRT
+  scanline/noise blending and grille math.
 
+#### Notes
+- Depth textures must be enabled on the Render Pipeline Asset for fog to work.
+- The post-process shaders are located by name via `Shader.Find`, so add them
+  to *Project Settings → Graphics → Always Included Shaders* or they may be
+  stripped from player builds.
+- Render features must be added to the renderer asset's feature list, and the
+  matching Volume component enabled on a Volume Profile.
 
-
-**https://github.com/Math-Man/URP-PSX-FORKED - branch for Unity 2022, URP 14 version.**
-
-**[URP-11](https://github.com/Math-Man/URP-PSX-FORKED/tree/URP-11) branch for Unity 2021, URP 11 version.**
-
-I've been using this for a short while now and really enjoying it, so I've decided to do some janitorial work on the project and add some of my own touches.
-
-First of all I upgraded the project to work on Unity 2022.3.17f1 and URP version 14. (It was working before just printing some warnings 🙂)
-
-I Also edited some existing shaders to stop giving warnings for Shadergraph versions above 10 (custom lighting shader for example).
-
-
-
-## Changes
-- Upgraded for Shadergraph version 14.
-- Added new render feature for CRT Effect. (Screen bending, vignette, scan lines, noise and chromatic aberration)
-- Added a new unlit shader with affine texture warping and vertex locking, **unfortunately I couldn't get around to implementing custom lighting**. Anyway this shader comes in two variants:
-    - A Regular version similar to original unlit shader in this project.
-    - PolyBrush version which supports PolyBrush texture painting.
-- Added a couple useful subgraphs, a random color picker and voronoi center graph.
-- Added a variation of the PBR shader that is transparent. (Only in URP 14 branch)
-
+## Inherited from Math-Man's fork
+- Upgraded for Shadergraph 14.
+- CRT render feature (screen bending, vignette, scan lines, noise,
+  chromatic aberration).
+- Unlit shader with affine texture warping and vertex locking, in regular
+  and PolyBrush variants. No custom lighting support.
+- Random color picker and voronoi center subgraphs.
+- Transparent variant of the PBR shader.
 
 <img src="Media/poly1.gif" width=100%>
 <img src="Media/crt1.gif" width=100%>
-
-#### Notes:
-- In newer versions of URP depth textures needs to enabled on the Render Pipeline Asset for fog to work.
-- New Affine texture warping shader currently doesn't have a lit variant and unlit variant does not support custom lighting.
-- Added scenes for both new shader variants and added CRT effect to all existing scenes.
 
 # Original Description:
 ## URP-PSX
