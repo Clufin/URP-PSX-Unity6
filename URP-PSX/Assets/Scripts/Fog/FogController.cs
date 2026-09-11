@@ -12,8 +12,8 @@ namespace PSX
 
         protected Fog fog;
         
-        [Range(0,50)]
-        [SerializeField] protected float fogDensity = 1.0f;
+        [Range(0,0.02f)]
+        [SerializeField] protected float fogDensity = 0.01f;
         [Range(0,1000)]
         [SerializeField] protected float fogDistance = 10.0f;
         [Range(0,100)]
@@ -32,37 +32,45 @@ namespace PSX
         [SerializeField] protected Color fogColor;
         [SerializeField] protected Color ambientColor;
 
-
-        public float getFogDistance => fogDistance;
-        public float setFogDistance(float value) => fogDistance = value;
-        
-        protected void Update()
+        public float FogDistance
         {
-            this.SetParams();
+            get => fogDistance;
+            set => fogDistance = value;
         }
 
-        protected void SetParams()
+        void OnEnable() => Apply();
+        void OnDisable() => Apply();
+        void OnValidate() => Apply();
+        protected void Update() => Apply();
+
+        public void SetEnabled(bool enabled)
         {
-            if (!this.isEnabled) return; 
-            if (this.volumeProfile == null) return;
-            if (this.fog == null) volumeProfile.TryGet<Fog>(out this.fog);
-            if (this.fog == null) return;
-            
-            
-            this.fog.fogDensity.value = this.fogDensity;
-            this.fog.fogDistance.value = this.fogDistance;
-            this.fog.fogNear.value = this.fogNear;
-            this.fog.fogFar.value = this.fogFar;
-            this.fog.fogAltScale.value = this.fogAltScale;
-            this.fog.fogThinning.value = this.fogThinning;
-            this.fog.noiseScale.value = this.noiseScale;
-            this.fog.noiseStrength.value = this.noiseStrength;
-            this.fog.fogColor.value = this.fogColor;
-            this.fog.ambientColor.value = this.ambientColor;
-            
-            
-            //ACCESSING PARAMS 
-            // this.fog.parameters.value
+            isEnabled = enabled;
+            Apply();
+        }
+
+        void Apply()
+        {
+            if (!volumeProfile) return;
+            if (fog == null && !volumeProfile.TryGet(out fog)) return;
+
+            fog.enabled.value = isEnabled;
+            if (!isEnabled) return;
+
+            if (fogFar <= fogNear + 1e-5f) fogFar = fogNear + 1f;
+
+            fog.fogDensity.value = Mathf.Clamp(fogDensity, 0f, 0.1f);
+            fog.fogDistance.value = Mathf.Clamp(fogDistance, 0f, 10f);
+
+            fog.fogNear.value = Mathf.Max(0f, fogNear);
+            fog.fogFar.value = Mathf.Max(fog.fogNear.value + 1e-3f, fogFar);
+
+            fog.noiseScale.value = Mathf.Max(1f, noiseScale);
+            fog.noiseStrength.value = Mathf.Clamp01(noiseStrength);
+
+            fog.fogColor.value = fogColor;
+            fog.ambientColor.value = ambientColor;
+
         }
     }
 }

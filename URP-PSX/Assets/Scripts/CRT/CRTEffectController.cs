@@ -37,17 +37,22 @@ public class CRTEffectController : MonoBehaviour
     [SerializeField] protected float grilleUvMidPoint = 0.5f;
     [SerializeField] protected Vector3 grilleShift = new Vector3(1.0f, 1.0f, 1.0f);
     
-    protected void Update()
-    {
-        this.SetParams();
-    }
 
-    protected void SetParams()
+    void OnEnable() => Apply();
+    void OnDisable() => Apply();
+    void OnValidate() => Apply();
+    void Update() => Apply();
+
+
+    protected void Apply()
     {
-        if (!this.isEnabled) return; 
         if (this.volumeProfile == null) return;
         if (this.crt == null) volumeProfile.TryGet<Crt>(out this.crt);
         if (this.crt == null) return;
+
+        crt.enabled.value = isEnabled;
+        if (!this.isEnabled) return;
+
 
         this.crt.scanlinesWeight.value = this.scanlinesWeight;
         this.crt.noiseWeight.value = this.noiseWeight;

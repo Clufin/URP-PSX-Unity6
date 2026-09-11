@@ -20,19 +20,26 @@ namespace PSX
             this.SetParams();
         }
 
+        public void SetEnabled(bool enabled)
+        {
+            isEnabled = enabled;
+        }
+
         protected void SetParams()
         {
-            if (!this.isEnabled) return; 
+
             if (this.volumeProfile == null) return;
             if (this.pixelation == null) volumeProfile.TryGet<Pixelation>(out this.pixelation);
             if (this.pixelation == null) return;
-            
-            
+            pixelation.enabled.value = isEnabled;
+
+            if (!this.isEnabled) return;
+
             //ACCESSING PARAMS 
             this.pixelation.widthPixelation.value = this.widthPixelation;
             this.pixelation.heightPixelation.value = this.heightPixelation;
             this.pixelation.colorPrecision.value = this.colorPrecision;
-            
+
             
         }
     }

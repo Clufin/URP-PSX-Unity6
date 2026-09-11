@@ -13,70 +13,93 @@ MonoBehaviour:
   m_Name: Crt
   m_EditorClassIdentifier: 
   active: 1
+  <displayName>k__BackingField: 
   scanlinesWeight:
+    <fieldHash>k__BackingField: -1849820360
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 0
   noiseWeight:
+    <fieldHash>k__BackingField: -1371119576
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 0
   screenBendX:
+    <fieldHash>k__BackingField: -653068400
     m_OverrideState: 1
     m_Value: 3
   screenBendY:
+    <fieldHash>k__BackingField: -413718008
     m_OverrideState: 1
     m_Value: 3
   vignetteAmount:
+    <fieldHash>k__BackingField: -174367616
     m_OverrideState: 1
     m_Value: 0.98
   vignetteSize:
+    <fieldHash>k__BackingField: 64982776
     m_OverrideState: 1
     m_Value: 2.06
   vignetteRounding:
+    <fieldHash>k__BackingField: 304333168
     m_OverrideState: 1
     m_Value: 5.26
   vignetteSmoothing:
+    <fieldHash>k__BackingField: 543683560
     m_OverrideState: 1
     m_Value: 0.2
   scanlinesDensity:
+    <fieldHash>k__BackingField: 783033952
     m_OverrideState: 1
     m_Value: 200
   scanlinesSpeed:
+    <fieldHash>k__BackingField: 1022384344
     m_OverrideState: 1
     m_Value: 200
   noiseAmount:
+    <fieldHash>k__BackingField: 1501085128
     m_OverrideState: 1
     m_Value: 250
   chromaticRed:
+    <fieldHash>k__BackingField: 1740435520
     m_OverrideState: 1
     m_Value: {x: 0.002, y: -0.002}
   chromaticGreen:
+    <fieldHash>k__BackingField: 1979785912
     m_OverrideState: 1
     m_Value: {x: -0.002, y: 0.002}
   chromaticBlue:
+    <fieldHash>k__BackingField: -2075830992
     m_OverrideState: 1
     m_Value: {x: 0, y: 0}
   grilleOpacity:
-    m_OverrideState: 1
-    m_Value: 0.4
-  grilleCounterOpacity:
+    <fieldHash>k__BackingField: -1836480600
     m_OverrideState: 1
     m_Value: 0.2
+  grilleCounterOpacity:
+    <fieldHash>k__BackingField: -1597130208
+    m_OverrideState: 1
+    m_Value: 0.3
   grilleResolution:
+    <fieldHash>k__BackingField: -1357779816
     m_OverrideState: 1
-    m_Value: 360
+    m_Value: 640
   grilleCounterResolution:
+    <fieldHash>k__BackingField: -1118429424
     m_OverrideState: 1
-    m_Value: 540
+    m_Value: 380
   grilleUvRotation:
+    <fieldHash>k__BackingField: -879079032
     m_OverrideState: 1
-    m_Value: 1.618034
+    m_Value: 90
   grilleBrightness:
+    <fieldHash>k__BackingField: -639728640
     m_OverrideState: 1
-    m_Value: 15
+    m_Value: 16
   grilleUvMidPoint:
+    <fieldHash>k__BackingField: -1254122888
     m_OverrideState: 1
     m_Value: 0.5
   grilleShift:
+    <fieldHash>k__BackingField: -1014772496
     m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1}
 --- !u!114 &-2649047749314681680
@@ -91,7 +114,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35a1bd58dd7548198609eabd8ae2bb7d, type: 3}
   m_Name: Pixelation
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   widthPixelation:
     m_OverrideState: 1
     m_Value: 512
@@ -113,17 +136,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ea62842ddb6960488930897ba9ce398, type: 3}
   m_Name: Dithering
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
+  <displayName>k__BackingField: 
   patternIndex:
+    <fieldHash>k__BackingField: -1067247768
     m_OverrideState: 1
     m_Value: 1
   ditherThreshold:
+    <fieldHash>k__BackingField: -827897376
     m_OverrideState: 1
     m_Value: 3.53
   ditherStrength:
+    <fieldHash>k__BackingField: -588546984
     m_OverrideState: 0
     m_Value: 1.37
   ditherScale:
+    <fieldHash>k__BackingField: 129504192
     m_OverrideState: 1
     m_Value: 4.67
 --- !u!114 &11400000
@@ -141,8 +169,6 @@ MonoBehaviour:
   components:
   - {fileID: 169896938054019971}
   - {fileID: -2649047749314681680}
-  - {fileID: -758010384845797820}
-  - {fileID: -7268622276910365992}
 --- !u!114 &169896938054019971
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -155,7 +181,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32eb3b8fb939d9b41b04b5621e6d36dd, type: 3}
   m_Name: Fog
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   fogDensity:
     m_OverrideState: 1
     m_Value: 10

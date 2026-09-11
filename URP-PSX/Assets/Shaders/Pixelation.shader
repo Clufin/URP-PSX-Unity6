@@ -2,66 +2,81 @@
 {
     Properties
     {
-        _MainTex("Texture", 2D) = "white" {}
+        // RG will bind the source color here
+        _BlitTexture("Texture", 2D) = "white" {}
     }
-    
-    CGINCLUDE
-        #include "UnityCG.cginc"
-    
-        sampler2D _MainTex;  
-        
-        //for Pixelation      
-        float _WidthPixelation;
-        float _HeightPixelation;
-        
-        //for color precision
-        float _ColorPrecision;
-        
-        struct appdata
-        {
-            float4 vertex : POSITION;
-            float2 uv : TEXCOORD0;
+
+    SubShader
+    {
+        Tags { "RenderPipeline" = "UniversalPipeline" }
+        Cull Off ZWrite Off ZTest Always
+
+        HLSLINCLUDE
+        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+        TEXTURE2D(_BlitTexture);
+        SAMPLER(sampler_BlitTexture);
+
+        // params
+        float _WidthPixelation;   // columns  (>=1)
+        float _HeightPixelation;  // rows     (>=1)
+        float _ColorPrecision;    // color steps (>=1)
+
+        struct Varyings {
+            float4 positionCS : SV_POSITION;
+            float2 uv         : TEXCOORD0;
         };
 
-        struct v2f
+        Varyings Vert(uint vid : SV_VertexID)
         {
-            float2 uv : TEXCOORD0;
-            float4 vertex : SV_POSITION;
-        };
-        
-        
-        v2f Vert(appdata v)
-        {
-            v2f o;
-            o.vertex = UnityObjectToClipPos(v.vertex);
-            o.uv = v.uv;
+            Varyings o;
+            o.positionCS = GetFullScreenTriangleVertexPosition(vid);
+            o.uv         = GetFullScreenTriangleTexCoord(vid);
             return o;
         }
 
-        float4 Frag (v2f i) : SV_Target
+        // clamp to avoid div-by-zero and keep sensible ranges
+        float2 QuantizeUV(float2 uv, float2 grid)
         {
-            //pixelation 
-            float2 uv = i.uv;
-            uv.x = floor(uv.x * _WidthPixelation) / _WidthPixelation;
-            uv.y = floor(uv.y * _HeightPixelation) / _HeightPixelation;
-            
-            float4 Color = tex2D(_MainTex, uv) ;
-            //color precision
-            Color = floor(Color * _ColorPrecision)/_ColorPrecision;
-            return Color;
+            grid = max(grid, float2(1.0, 1.0));
+            return floor(uv * grid) / grid;
         }
-    ENDCG
-    
-    SubShader
-    {
-        Cull Off ZWrite Off ZTest Always
-        Tags { "RenderPipeline" = "UniversalPipeline"}
+
+        half4 Frag(Varyings i) : SV_Target
+        {
+            float2 grid = float2(_WidthPixelation, _HeightPixelation);
+            float2 uvQ  = QuantizeUV(i.uv, grid);
+
+            float3 col = SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, uvQ).rgb;
+
+            // color precision quantization
+            float steps = max(_ColorPrecision, 1.0);
+            col = floor(col * steps) / steps;
+
+            return half4(col, 1.0);
+        }
+
+        // pure copy
+        half4 FragCopy(Varyings i) : SV_Target
+        {
+            return SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, i.uv);
+        }
+        ENDHLSL
+
         Pass
         {
-            CGPROGRAM
-                #pragma vertex Vert
-                #pragma fragment Frag
-            ENDCG
+            HLSLPROGRAM
+            #pragma vertex   Vert
+            #pragma fragment Frag
+            ENDHLSL
+        }
+
+        Pass
+        {
+            HLSLPROGRAM
+            #pragma vertex   Vert
+            #pragma fragment FragCopy
+            ENDHLSL
         }
     }
 }

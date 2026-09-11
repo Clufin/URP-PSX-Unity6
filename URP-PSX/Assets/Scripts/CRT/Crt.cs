@@ -6,7 +6,7 @@ using UnityEngine.Rendering.Universal;
 
 public class Crt : VolumeComponent, IPostProcessComponent
 {
-    public FloatParameter scanlinesWeight = new FloatParameter(1f);
+    public FloatParameter scanlinesWeight = new FloatParameter(0.05f);
     public FloatParameter noiseWeight = new FloatParameter(1f);
 
     public FloatParameter screenBendX = new FloatParameter(1000.0f);
@@ -35,8 +35,10 @@ public class Crt : VolumeComponent, IPostProcessComponent
     public FloatParameter grilleUvMidPoint = new FloatParameter(0.5f);
     public Vector3Parameter grilleShift = new Vector3Parameter(new Vector3(1.0f, 1.0f, 1.0f));
 
+    public BoolParameter enabled = new BoolParameter(false);
+
 
     //INTERFACE REQUIREMENT 
-    public bool IsActive() => true;
+    public bool IsActive() => enabled.value;
     public bool IsTileCompatible() => false;
 }

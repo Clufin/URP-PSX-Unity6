@@ -27,8 +27,11 @@ namespace PSX
         [Range(0,1)]
         public FloatParameter noiseStrength = new FloatParameter(0.05f);
 
+        public BoolParameter enabled = new BoolParameter(false);
+
+
         //INTERFACE REQUIREMENT 
-        public bool IsActive() => true;
+        public bool IsActive() => enabled.value;
         public bool IsTileCompatible() => false;
     }
 }

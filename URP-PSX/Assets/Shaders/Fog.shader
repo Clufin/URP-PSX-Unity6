@@ -1,117 +1,131 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-
-Shader "PostEffect/Fog"
+﻿Shader "PostEffect/Fog"
 {
     Properties
     {
-        _MainTex("Texture", 2D) = "white" {}
+        // Placeholder only; RG will bind the source color to _BlitTexture
+        _BlitTexture("Texture", 2D) = "white" {}
     }
-    
-    CGINCLUDE
-        #include "UnityCG.cginc"
-        #include "./cginc/voronoi.cginc"
-        sampler2D _MainTex;
-        sampler2D _CameraDepthTexture;
-        
-        float _FogDensity;
-        float _FogDistance;
-        float4 _FogColor;
-        float4 _AmbientColor;
-        
-        float _FogNear;
-        float _FogFar;
-        float _FogAltScale;
-        float _FogThinning;
-        
-        float _NoiseScale;
-        float _NoiseStrength;
 
-        struct appdata
-        {
-            float4 vertex : POSITION;
-            float2 uv : TEXCOORD0;
-        };
-        
-        struct v2f
-        {
-            float4 vertex : SV_POSITION;
-            float2 uv : TEXCOORD0;
-            float2 screenPosition : TEXCOORD1;
-            float4 worldPos : TEXCOORD2;
-        };
-        
-        
-        float ComputeDistance(float depth)
-        {
-            float dist = depth * _ProjectionParams.z;
-            dist -= _ProjectionParams.y * _FogDistance;
-            return dist;
-        }
-        
-        half ComputeFog(float z, float _Density)
-        {
-            half fog = 0.0;
-            fog = exp2(_Density * z);
-            //fog = _Density * z;
-            //fog = exp2(-fog * fog);
-            return saturate(fog);
-        }
+    SubShader
+    {
+        Tags { "RenderPipeline" = "UniversalPipeline" }
+        Cull Off ZWrite Off ZTest Always
 
-        v2f Vert(appdata v)
+        HLSLINCLUDE
+        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+        // --- RG source & depth ---
+        TEXTURE2D(_BlitTexture);
+        SAMPLER(sampler_BlitTexture);
+
+        TEXTURE2D_X_FLOAT(_CameraDepthTexture);
+
+        // --- Parameters (match C# property IDs) ---
+        float   _FogDensity;      // density scale
+        float   _FogDistance;     // extra distance scale (multiplier)
+        float4  _FogColor;        // fog color
+        float4  _AmbientColor;    // ambient multiplier
+
+        float   _FogNear;         // near distance (eye space)
+        float   _FogFar;          // far distance (eye space)
+        float   _FogAltScale;     // (reserved for altitude fog; not used here)
+        float   _FogThinning;     // (reserved)
+
+        float   _NoiseScale;      // screen-space noise tiling
+        float   _NoiseStrength;   // noise contribution
+
+        struct Varyings {
+            float4 positionCS : SV_POSITION;
+            float2 uv         : TEXCOORD0;
+        };
+
+        // Fullscreen triangle
+        Varyings Vert(uint vid : SV_VertexID)
         {
-            v2f o;
-            o.vertex = UnityObjectToClipPos(v.vertex);
-            o.uv = v.uv;
-            o.worldPos = mul(unity_ObjectToWorld, v.vertex);
-            o.screenPosition = ComputeScreenPos(o.vertex);
+            Varyings o;
+            o.positionCS = GetFullScreenTriangleVertexPosition(vid);
+            o.uv         = GetFullScreenTriangleTexCoord(vid);
             return o;
         }
 
-        float4 Frag (v2f i) : SV_Target
+        // Cheap hash noise in [0,1]
+        float hash21(float2 p)
         {
-            //uvs
-            float2 screenPos = i.screenPosition.xy;
-            float2 screenParam = _ScreenParams.xy;
-            float2 uv = i.uv;
-            
-            //base texture 
-            float4 Color = tex2D(_MainTex, uv) ;            
-            
-            //lighting 
-            float3 worldCam = _WorldSpaceCameraPos;
-            float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
-            float3 viewDirection = normalize(float3(float4(_WorldSpaceCameraPos.xyz, 1.0) - i.worldPos.xyz));
-            //float d = length(viewDirection);
-            //float l = saturate((d - _FogNear) / (_FogFar - _FogNear) / clamp(i.worldPos.y / _FogAltScale + 1, 1, _FogThinning));
-            
-            //background and color 
-            float4 ambientColor = _AmbientColor; //float4(0.1,0.1,0.1,0.1);
-            float4 background = tex2D(_MainTex, i.uv);
-            
-            //depth handling
-            float Depth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, uv);
-            float linearDepth = Linear01Depth(Depth);
-            //float finalDepth = linearDepth * _FogDistance;
-            
-            float dist = ComputeDistance(Depth);
-            float fog = 1.0 - ComputeFog(dist, _FogDensity);
- 
-            float screenNoise = cnoise(screenPos * screenParam / _NoiseScale);            
-  
-            return lerp(Color, _FogColor * ambientColor , saturate(fog + (screenNoise * _NoiseStrength)) );
+            p = frac(p * float2(123.34, 345.45));
+            p += dot(p, p + 34.345);
+            return frac(p.x * p.y);
         }
-    ENDCG
-    
-    SubShader
-    {
-        Cull Off ZWrite Off ZTest Always
-        Tags { "RenderPipeline" = "UniversalPipeline"}
+
+        // Screen-space value noise (one-liner)
+        float screenNoise(float2 uv, float scale)
+        {
+            float2 px = uv * _ScreenParams.xy / max(scale, 1.0);
+            return hash21(floor(px));
+        }
+
+        half4 Frag(Varyings i) : SV_Target
+        {
+            float2 uv = i.uv;
+
+            // Sample source color
+            float3 src = SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, uv).rgb;
+
+            // Depth sampling
+            float rawDepth = SAMPLE_TEXTURE2D_X(_CameraDepthTexture, sampler_PointClamp, uv).r;
+
+            // Identify skybox / no-geometry pixels -> skip fog on those
+            bool noGeometry =
+            #if defined(UNITY_REVERSED_Z)
+                (rawDepth <= 1e-6);
+            #else
+                (rawDepth >= 1.0 - 1e-6);
+            #endif
+
+            float fogFac = 0.0;
+            if (!noGeometry)
+            {
+                // Eye-space depth (meters-ish)
+                float eyeZ = LinearEyeDepth(rawDepth, _ZBufferParams);
+
+                // Normalize by near/far band (optional fade-in/out)
+                float nearFar = max(_FogFar - _FogNear, 1e-5);
+                float band    = saturate( (eyeZ - _FogNear) / nearFar );
+
+                // Exponential fog, distance-scaled
+                float dens = max(_FogDensity, 0.0) * max(_FogDistance, 0.0);
+                fogFac = 1.0 - exp2(-dens * eyeZ * band);
+
+                // Add a bit of screen noise to break banding
+                float n = screenNoise(uv, max(_NoiseScale, 1.0)) - 0.5;
+                fogFac = saturate(fogFac + n * _NoiseStrength);
+            }
+
+            float3 fogCol = (_FogColor.rgb * _AmbientColor.rgb);
+            float3 outCol = lerp(src, fogCol, fogFac);
+            return half4(outCol, 1.0);
+        }
+
+        // Pure copy (debug)
+        half4 FragCopy(Varyings i) : SV_Target
+        {
+            return SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, i.uv);
+        }
+        ENDHLSL
+
         Pass
         {
-            CGPROGRAM
-                #pragma vertex Vert
-                #pragma fragment Frag
-            ENDCG
+            HLSLPROGRAM
+            #pragma vertex   Vert
+            #pragma fragment Frag
+            ENDHLSL
+        }
+
+        Pass
+        {
+            HLSLPROGRAM
+            #pragma vertex   Vert
+            #pragma fragment FragCopy
+            ENDHLSL
         }
     }
 }
